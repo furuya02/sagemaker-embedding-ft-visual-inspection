@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+
+# データセット
+#   アヒル(data/duck, 約64MB)は再現性のため同梱する。
+#   VisA は 1.8GB あるので同梱せず、scripts の手順で取得してもらう。
+data/*
+!data/duck/
+data/*.tar
+
+outputs/
+
+# CDK
+cdk/node_modules/
+cdk/cdk.out/
+cdk/*.js
+cdk/*.d.ts
+
+.DS_Store
+.env

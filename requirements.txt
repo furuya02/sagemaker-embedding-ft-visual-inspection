@@ -1,0 +1,8 @@
+# 検証環境: Python 3.10.13 / macOS (Apple Silicon, MPS)
+torch>=2.9
+transformers>=4.45
+pillow
+numpy
+scikit-learn
+matplotlib
+boto3
