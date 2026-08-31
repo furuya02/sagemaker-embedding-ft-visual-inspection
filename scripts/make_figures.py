@@ -163,10 +163,61 @@ def fig_heatmap():
     fig.savefig(BLOG / "011.png", dpi=130); plt.close(fig)
 
 
+# ------------------------------------------------------------ 012 FTが効く条件
+def fig_ft_condition():
+    """FT が効く条件と効かない条件（記事の新しい結論）。"""
+    labels = ["条件を揃えた場合\n(27枚・3照明)", "分布シフト\n(学習9枚)",
+              "分布シフト × 難易度hard\n(前記事の残課題)"]
+    before = [11.63, -2.28, -2.09]
+    after = [3.39, -0.30, 1.00]
+    x = np.arange(len(labels)); w = 0.36
+    fig, ax = plt.subplots(figsize=(9.6, 5.4))
+    b1 = ax.bar(x - w/2, before, w, label="FT 前", color="#7f8c9b")
+    b2 = ax.bar(x + w/2, after, w, label="FT 後",
+                color=["#c0504d", "#c0504d", "#4f81bd"])
+    for bars, vals in [(b1, before), (b2, after)]:
+        for bar, v in zip(bars, vals):
+            ax.text(bar.get_x() + bar.get_width()/2, v + (0.35 if v >= 0 else -0.9),
+                    f"{v:+.2f}σ", ha="center", fontsize=10.5, fontweight="bold")
+    ax.axhline(0, color="#333", lw=1.2)
+    ax.set_xticks(x); ax.set_xticklabels(labels, fontsize=10.5)
+    ax.set_ylabel("運用ウィンドウ（σ）", fontsize=11)
+    ax.set_title("ファインチューニングが効く条件・効かない条件\n"
+                 "元の精度が高いほど FT の効果は小さく、むしろ余裕を減らす", fontsize=12.5)
+    ax.legend(fontsize=10.5); ax.grid(axis="y", alpha=0.25)
+    ax.annotate("負 → 正\n完全分離を達成", xy=(2 + w/2, 1.00), xytext=(2.05, 6.2),
+                fontsize=10.5, color="#4f81bd", fontweight="bold", ha="center",
+                arrowprops=dict(arrowstyle="->", color="#4f81bd", lw=1.6))
+    fig.tight_layout(); fig.savefig(BLOG / "012.png", dpi=140); plt.close(fig)
+
+
+# ------------------------------------------------------------ 013 FT改善の内訳
+def fig_ft_steps():
+    """初版の失敗を切り分けて積み上げた改善（分布シフト条件）。"""
+    steps = ["初版\n(CLSで分類・埋め込みで評価)", "A 分類ヘッドを\n直接スコアに",
+             "D パッチ単位で\n分類", "アンサンブル\n(埋め込み+ヘッド)"]
+    vals = [-2.43, -1.12, -0.95, -0.30]
+    fig, ax = plt.subplots(figsize=(9.6, 5))
+    bars = ax.bar(np.arange(len(steps)), vals, 0.6,
+                  color=["#c0504d", "#d99694", "#9bbb59", "#4f81bd"])
+    for bar, v in zip(bars, vals):
+        ax.text(bar.get_x() + bar.get_width()/2, v - 0.16, f"{v:+.2f}σ",
+                ha="center", va="top", fontsize=11, fontweight="bold")
+    ax.axhline(0, color="#333", lw=1.2)
+    ax.set_xticks(np.arange(len(steps))); ax.set_xticklabels(steps, fontsize=10)
+    ax.set_ylabel("運用ウィンドウ（σ）", fontsize=11)
+    ax.set_ylim(-2.9, 0.35)
+    ax.set_title("初版の失敗を 4 つに切り分けて改善した（分布シフト条件）\n"
+                 "最大の原因は「評価が学習目標とズレていた」ことだった", fontsize=12.5)
+    ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout(); fig.savefig(BLOG / "013.png", dpi=140); plt.close(fig)
+
+
 if __name__ == "__main__":
     BLOG.mkdir(exist_ok=True)
     for name, fn in [("006 照明の模式図", fig_lighting), ("007 3条件の作例", fig_conditions),
                      ("008 before/after", fig_before_after), ("009 運用ウィンドウ", fig_window),
-                     ("010 分布シフト", fig_window_shift), ("011 ヒートマップ", fig_heatmap)]:
+                     ("010 分布シフト", fig_window_shift), ("011 ヒートマップ", fig_heatmap),
+                     ("012 FTが効く条件", fig_ft_condition), ("013 FT改善の内訳", fig_ft_steps)]:
         fn(); print(f"  {name} ... done", flush=True)
     print(f"\nsaved to {BLOG}")
