@@ -108,16 +108,6 @@ Only the last 2 blocks of DINOv2 (3.6M of 22.1M) are updated.
 .venv/bin/python scripts/make_figures.py
 ```
 
-### 6. Validation on VisA (optional, 3.7GB download)
-
-```bash
-aws s3 cp --no-sign-request s3://amazon-visual-anomaly/VisA_20220922.tar data/
-tar xf data/VisA_20220922.tar -C data/
-.venv/bin/python scripts/run_visa.py --category candle --n-train 200 --n-test-ok -1 --n-test-ng -1
-.venv/bin/python scripts/subsample_stability.py --category candle --trials 300
-```
-
-VisA is published on the AWS Open Data Registry and **can be downloaded without an AWS account**.
 
 ---
 
@@ -168,7 +158,6 @@ Checks size, sharpness, exposure, margins, duplicates and per-object variation, 
 │   ├── run_bedrock.py    Bedrock, three models
 │   ├── train_ft.py       Fine-tuning
 │   ├── make_figures.py   Figures for the article
-│   └── run_visa.py       Validation on VisA
 └── data/duck/            67 duck images (CC BY 4.0)
 ```
 
@@ -195,7 +184,6 @@ See [data/duck/README.md](data/duck/README.md) for details.
 ## References
 
 - Previous article: https://dev.classmethod.jp/articles/visual-inspection-with-amazon-titan-multimodal-embeddings/
-- VisA (Zou et al., ECCV 2022): https://github.com/amazon-science/spot-diff
 - AnomalyDINO (WACV 2025): https://arxiv.org/abs/2405.14529
 - PatchCore: https://arxiv.org/abs/2106.08265
 - DINOv2: https://github.com/facebookresearch/dinov2

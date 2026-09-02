@@ -25,10 +25,3 @@ Suggested citation:
   https://github.com/furuya02/sagemaker-embedding-ft-visual-inspection
   Licensed under CC BY 4.0.
 
---------------------------------------------------------------------------
-Note on the VisA dataset
-
-This repository also refers to the VisA dataset (Zou et al., ECCV 2022),
-which is distributed separately under CC BY 4.0 by Amazon Science.
-VisA images are NOT included in this repository; see scripts/ for how to
-download them from the AWS Open Data Registry.
