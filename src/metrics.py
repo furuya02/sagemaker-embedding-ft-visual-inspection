@@ -42,7 +42,9 @@ def to_sigma(scores, calib_normal):
     """
     c = np.asarray(calib_normal)
     mu, sd = c.mean(), c.std(ddof=1)
-    return (np.asarray(scores) - mu) / (sd if sd > 0 else 1e-8)
+    # 校正データが少ないと sd が極端に小さくなり、割り算で値が発散する。
+    # 実測では 0.001 を下回ることはなかったので、そこで下限を切る。
+    return (np.asarray(scores) - mu) / max(float(sd), 1e-3)
 
 
 def operating_window(ok_scores, ng_scores, max_fp=0.05, min_recall=0.90):

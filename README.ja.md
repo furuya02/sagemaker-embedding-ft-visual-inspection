@@ -106,16 +106,6 @@ DINOv2 の最終 2 ブロック（3.6M / 22.1M）のみ更新します。**ロ�
 .venv/bin/python scripts/make_figures.py
 ```
 
-### 6. VisA での検証（任意・3.7GB のダウンロードが必要）
-
-```bash
-aws s3 cp --no-sign-request s3://amazon-visual-anomaly/VisA_20220922.tar data/
-tar xf data/VisA_20220922.tar -C data/
-.venv/bin/python scripts/run_visa.py --category candle --n-train 200 --n-test-ok -1 --n-test-ng -1
-.venv/bin/python scripts/subsample_stability.py --category candle --trials 300
-```
-
-VisA は AWS Open Data Registry で公開されており、**AWS アカウント無しで取得できます**。
 
 ---
 
@@ -167,7 +157,6 @@ VisA は AWS Open Data Registry で公開されており、**AWS アカウント
 │   ├── run_bedrock.py    Bedrock 3 モデル
 │   ├── train_ft.py       ファインチューニング
 │   ├── make_figures.py   記事用の図
-│   └── run_visa.py       VisA での検証
 └── data/duck/            アヒル 67 枚（CC BY 4.0）
 ```
 
@@ -194,7 +183,6 @@ VisA は AWS Open Data Registry で公開されており、**AWS アカウント
 ## 参考
 
 - 前記事: https://dev.classmethod.jp/articles/visual-inspection-with-amazon-titan-multimodal-embeddings/
-- VisA (Zou et al., ECCV 2022): https://github.com/amazon-science/spot-diff
 - AnomalyDINO (WACV 2025): https://arxiv.org/abs/2405.14529
 - PatchCore: https://arxiv.org/abs/2106.08265
 - DINOv2: https://github.com/facebookresearch/dinov2

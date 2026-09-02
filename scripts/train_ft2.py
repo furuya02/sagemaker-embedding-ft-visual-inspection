@@ -59,28 +59,6 @@ def paths(train_set, _levels=LEVELS):
     return fit, cal, ok, ng
 
 
-def visa_paths(category="candle", n_fit=7, n_cal=2, seed=0):
-    """VisA でハイパーパラメータを決めるための分割。
-
-    アヒルの本番データで NG を見ながらハイパーパラメータを選ぶと、
-    「準備に不良画像を使わない」というコンセプトに反する。
-    そこで公開データで決めてから、その設定をアヒルにそのまま適用する。
-    学習枚数はアヒルの分布シフト条件（7 枚）に合わせる。
-    """
-    import csv
-    from collections import defaultdict
-    root = ROOT / "data"
-    rows = defaultdict(list)
-    with open(root / "split_csv" / "1cls.csv") as f:
-        for r in csv.DictReader(f):
-            if r["object"] == category:
-                rows[(r["split"], r["label"])].append(str(root / r["image"]))
-    rng = np.random.default_rng(seed)
-    tr = sorted(rows[("train", "normal")])
-    idx = rng.choice(len(tr), n_fit + n_cal, replace=False)
-    sel = [tr[i] for i in idx]
-    return sel[:n_fit], sel[n_fit:], sorted(rows[("test", "normal")]), sorted(rows[("test", "anomaly")])
-
 
 def load_tensor(path, size):
     im = Image.open(path).convert("RGB").resize((size, size), Image.BICUBIC)
@@ -262,8 +240,6 @@ def eval_embed(tag, enc, fit, cal, ok, ng, agg, results):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["duck", "visa"], default="duck")
-    ap.add_argument("--category", default="candle", help="VisA のカテゴリ")
     ap.add_argument("--train-set", choices=["all", "normal"], default="all")
     ap.add_argument("--levels", default="easy,medium,hard",
                     help="評価に使う異常の難易度（前記事の残課題は hard）")
@@ -279,10 +255,7 @@ def main():
     ap.add_argument("--agg", type=int, default=3)
     args = ap.parse_args()
 
-    if args.dataset == "visa":
-        fit, cal, ok, ng = visa_paths(args.category)
-    else:
-        fit, cal, ok, ng = paths(args.train_set, args.levels.split(","))
+    fit, cal, ok, ng = paths(args.train_set, args.levels.split(","))
     print(f"■ 改善版FT  学習 {len(fit)} 枚 / 校正 {len(cal)} 枚 / 評価 OK {len(ok)} NG {len(ng)}")
     print(f"  score={args.score}  scar={args.scar}  blocks={args.blocks} "
           f"lr={args.lr}/{args.head_lr} epochs={args.epochs} patch={args.patch_level}\n")
@@ -307,13 +280,13 @@ def main():
     e_cal, e_ok, e_ng = emb
     def z(x, base):
         mu, sd = np.mean(base), np.std(base, ddof=1)
-        return (np.asarray(x) - mu) / (sd if sd > 0 else 1e-8)
+        return (np.asarray(x) - mu) / max(float(sd), 1e-3)   # sd≈0 での発散を防ぐ
     for w in [1.0, 1.5, 2.0, 3.0, 5.0]:
         mix = lambda e, h: z(e, e_cal) + w * z(h, h_cal)   # noqa: E731
         summarize(f"FT後 アンサンブル(w={w})", mix(e_cal, h_cal),
                   mix(e_ok, h_ok), mix(e_ng, h_ng), ok, results)
 
-    tag = (f"{args.dataset}_{args.train_set}_{'scar' if args.scar else 'plain'}"
+    tag = (f"{args.train_set}_{'scar' if args.scar else 'plain'}"
            f"_b{args.blocks}_e{args.epochs}_{'patch' if args.patch_level else 'cls'}")
     out = ROOT / "outputs" / f"ft2_{tag}.json"
     out.write_text(json.dumps(results, indent=2, ensure_ascii=False))

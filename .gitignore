@@ -2,9 +2,7 @@
 __pycache__/
 *.pyc
 
-# データセット
-#   アヒル(data/duck, 約64MB)は再現性のため同梱する。
-#   VisA は 1.8GB あるので同梱せず、scripts の手順で取得してもらう。
+# データセット（アヒル 約64MB は再現性のため同梱する）
 data/*
 !data/duck/
 data/*.tar
