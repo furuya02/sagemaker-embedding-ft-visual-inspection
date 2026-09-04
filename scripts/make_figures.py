@@ -213,11 +213,71 @@ def fig_ft_steps():
     fig.tight_layout(); fig.savefig(BLOG / "013.png", dpi=140); plt.close(fig)
 
 
+# ------------------------------------------------------------ 016 パッチとは
+def fig_patch_concept():
+    """「1画像=1ベクトル」と「パッチ単位」の違いを示す。"""
+    from src.embed import Dinov2Encoder, aggregate_neighbors
+    from src.memorybank import PatchMemoryBank
+
+    grid, size = 37, 518
+    ng = DATA / "test_ng" / "hard" / "ng_hard_17.png"
+    im = np.asarray(Image.open(ng).convert("RGB").resize((size, size)))
+
+    # 実際のパッチスコアを計算して、反応した位置を示す
+    enc = Dinov2Encoder(size=size)
+    tr = sorted(str(p) for c in LIGHTS for p in (DATA / "train_ok" / c).glob("*.png"))
+    _, pat_tr = enc.encode(tr)
+    _, pat_q = enc.encode([str(ng)])
+    ag = lambda p: aggregate_neighbors(p, enc.grid, 3)      # noqa: E731
+    mb = PatchMemoryBank(coreset_ratio=1.0).fit(ag(pat_tr))
+    _, ps = mb.score(ag(pat_q))
+    smap = ps[0].reshape(grid, grid)
+    hot = smap > np.percentile(smap, 99.5)                   # 上位0.5%のパッチ
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 6.4))
+
+    # 左: 1画像 = 1ベクトル
+    ax = axes[0]
+    ax.imshow(im); ax.set_xticks([]); ax.set_yticks([])
+    ax.set_title("1 画像 = 1 ベクトル\n画像全体を 384 次元 1 本に要約する", fontsize=13, pad=10)
+    ax.add_patch(plt.Rectangle((2, 2), size - 5, size - 5, fill=False, ec="#4f81bd", lw=4))
+    ax.text(size / 2, size + 34, "→　ベクトル 1 本", ha="center", fontsize=14,
+            color="#2E5C8A", fontweight="bold")
+    ax.text(size / 2, size + 72, "幅 1mm の傷は画像の 0.07%。\n全体の要約に埋もれてしまう",
+            ha="center", va="top", fontsize=11.5, color="#555")
+
+    # 右: パッチ単位
+    ax = axes[1]
+    ax.imshow(im); ax.set_xticks([]); ax.set_yticks([])
+    ax.set_title(f"パッチ単位\n{grid}×{grid} のマスに分け、マスごとに 1 本ずつ",
+                 fontsize=13, pad=10)
+    step = size / grid
+    for i in range(grid + 1):                                 # 実際の分割線
+        ax.plot([0, size], [i * step, i * step], color="#ffffff", lw=0.35, alpha=0.55)
+        ax.plot([i * step, i * step], [0, size], color="#ffffff", lw=0.35, alpha=0.55)
+    ax.set_xlim(0, size); ax.set_ylim(size, 0)                # imshow の座標系に戻す
+    ys, xs = np.where(hot)                                    # 反応したマスだけ赤枠
+    for y, x in zip(ys, xs):
+        ax.add_patch(plt.Rectangle((x * step, y * step), step, step,
+                                   fill=False, ec="#e03030", lw=2.2))
+    ax.text(size / 2, size + 34, f"→　ベクトル {grid * grid:,} 本", ha="center",
+            fontsize=14, color="#8A2E2E", fontweight="bold")
+    ax.text(size / 2, size + 72,
+            f"赤枠が「正常と違う」と判定されたマス（{hot.sum()} 個）。\n傷の乗ったマスだけが反応する",
+            ha="center", va="top", fontsize=11.5, color="#555")
+
+    fig.suptitle("ViT は画像を 14×14 ピクセルのマス（パッチ）に分けて処理する",
+                 fontsize=14.5, y=0.99)
+    fig.tight_layout(rect=[0, 0.10, 1, 0.94])
+    fig.savefig(BLOG / "016.png", dpi=135); plt.close(fig)
+
+
 if __name__ == "__main__":
     BLOG.mkdir(exist_ok=True)
     for name, fn in [("006 照明の模式図", fig_lighting), ("007 3条件の作例", fig_conditions),
                      ("008 before/after", fig_before_after), ("009 運用ウィンドウ", fig_window),
                      ("010 分布シフト", fig_window_shift), ("011 ヒートマップ", fig_heatmap),
-                     ("012 FTが効く条件", fig_ft_condition), ("013 FT改善の内訳", fig_ft_steps)]:
+                     ("012 FTが効く条件", fig_ft_condition), ("013 FT改善の内訳", fig_ft_steps),
+                     ("016 パッチとは", fig_patch_concept)]:
         fn(); print(f"  {name} ... done", flush=True)
     print(f"\nsaved to {BLOG}")
